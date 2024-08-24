@@ -14,7 +14,6 @@ const ReacPlayer = dynamic(() => import('react-player'), { ssr: false });
 
 const Slider = () => {
   const sliderRef = useRef(null);
-  const [isAnimating, setIsAnimating] = useState(false);
   const [isClient, setIsClient] = useState(false);
   let animating = false;
  
@@ -34,13 +33,14 @@ const Slider = () => {
   Observer.create({
       target: sliderRef.current, // can be any element (selector text is fine)
       type: "wheel,touch", // comma-delimited list of what to listen for ("wheel,touch,scroll,pointer")
-      wheelSpeed: -1,
-      onUp: () => !animating && slideToUp(),
-      onDown: () => {
-        !animating && slideToDown()
+      wheelSpeed: 0.005,
+      onUp: () => {
+        !animating && slideToUp();
       },
-      onStop: () => animating = false,
-      tolerance: 10,
+      onDown: () => {
+        !animating && slideToDown();
+      },
+      tolerance: 5,
       preventDefault: true,
       scrollSpeed: 0.01
     });
@@ -57,10 +57,11 @@ const Slider = () => {
   };
 
   const slideToDown = () => {
+    animating = true;
     const slider = sliderRef.current;
     const cards = Array.from(slider.querySelectorAll('.card'));
     const lastCard = cards.pop();
-    animating = true;
+    
     gsap.to(lastCard, {
       y: "+=150%",
       duration: 0.75,
@@ -69,30 +70,32 @@ const Slider = () => {
         setTimeout(() => {
           slider.prepend(lastCard);
           initializeCards();
-          /* setTimeout(() => {
-            
-          }, 1000); */
+          setTimeout(() => {
+            animating = false
+          }, 1000);
         }, 300);
       }
     })
   }
 
   const slideToUp = () => {
+    animating = true;
     const slider = sliderRef.current;
     const cards = Array.from(slider.querySelectorAll('.card'));
     const firstCard = cards.shift();
-    animating = true;
+    
     gsap.to(firstCard, {
       y: "+=150%",
+      z: 0,
       duration: 0.75,
       ease: 'power3.inOut',
       onStart: () => {
         setTimeout(() => {
           slider.append(firstCard);
           initializeCards();
-          /* setTimeout(() => {
-            
-          }, 1000); */
+          setTimeout(() => {
+            animating = false
+          }, 1000);
         }, 300);
       }
     })
